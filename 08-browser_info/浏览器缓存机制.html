@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>浏览器缓存机制</title>
+</head>
+<body>
+<!--
+缓存是性能优化中简单高效的一种优化方式了，它可以显著减少网络传输所带来的损耗
+
+对于一个数据请求来说，可以分为发起网络请求、后端处理、浏览器响应三个步骤。
+浏览器缓存可以帮助我们在第一和第三步骤中优化性能。
+比如说直接使用缓存而不发起请求，或者发起了请求但后端存储的数据和前端一致，那么就没有必要再将数据回传回来，这样就减少了响应数据。
+ -->
+
+<div class="content">
+  <h3>缓存位置</h3>
+  <hr>
+  <p>从缓存位置上来说分为四种，并且各自有优先级，当依次查找缓存且都没有命中的时候，才会去请求网络</p>
+  <ol>
+    <li>Service Worker</li>
+    <li>Memory Cache</li>
+    <li>Disk Cache</li>
+    <li>Push Cache</li>
+    <li>网络请求</li>
+  </ol>
+
+  <h4>Service Worker</h4>
+  <p>
+    Service Worker 的缓存与浏览器其他内建的缓存机制不同，它可以让我们自由控制缓存哪些文件、如何匹配缓存、如何读取缓存，并且缓存是持续性的。当 Service Worker 没有命中缓存的时候，我们需要去调用 fetch
+    函数获取数据。也就是说，如果我们没有在 Service Worker 命中缓存的话，会根据缓存查找优先级去查找数据。但是不管我们是从 Memory Cache 中还是从网络请求中获取的数据，浏览器都会显示我们是从Service
+    Worker中获取的内容
+  </p>
+
+  <h4>Memory Cache</h4>
+  <p>
+    Memory Cache 也就是内存中的缓存，读取内存中的数据肯定比磁盘快。但是内存缓存虽然读取高效，可是缓存持续性很短，会随着进程的释放而释放。 一旦我们关闭 Tab 页面，内存中的缓存也就被释放了
+  </p>
+
+  <h4>Disk Cache</h4>
+  <p>
+    Disk Cache 也就是存储在硬盘中的缓存，读取速度慢点，但是什么都能存储到磁盘中，比之 Memory Cache 胜在容量和存储时效性上。
+    在所有浏览器缓存中，Disk Cache 覆盖面基本是最大的。它会根据 HTTP Herder
+    中的字段判断哪些资源需要缓存，哪些资源可以不请求直接使用，哪些资源已经过期需要重新请求。并且即使在跨站点的情况下，相同地址的资源一旦被硬盘缓存下来，就不会再次去请求数据
+  </p>
+
+  <h4>Push Cache</h4>
+  <p>
+    Push Cache 是 HTTP/2 中的内容，当以上三种缓存都没有命中时，它才会被使用。并且缓存时间也很短暂，只在会话（Session）中存在，一旦会话结束就被释放。Push Cache 在国内能够查到的资料很少，也是因为
+    HTTP/2 在国内不够普及，但是 HTTP/2 将会是日后的一个趋势
+  </p>
+  <ul>
+    <li>所有的资源都能被推送，但是 Edge 和 Safari 浏览器兼容性不怎么好</li>
+    <li>可以推送 no-cache 和 no-store 的资源</li>
+    <li>一旦连接被关闭，Push Cache 就被释放</li>
+    <li>多个页面可以使用相同的 HTTP/2 连接，也就是说能使用同样的缓存</li>
+    <li>Push Cache 中的缓存只能被使用一次</li>
+    <li>浏览器可以拒绝接受已经存在的资源推送</li>
+    <li>你可以给其他域名推送资源</li>
+  </ul>
+
+  <h4>网络请求</h4>
+  <p>如果所有缓存都没有命中的话，那么只能发起请求来获取资源了</p>
+</div>
+
+<!-- 缓存策略 -->
+<div class="cache">
+  <h3>缓存策略</h3>
+  <hr>
+  <p>通常浏览器缓存策略分为两种：<em>强缓存</em>和<em>协商缓存</em>，并且缓存策略都是通过设置 HTTP Header 来实现的。</p>
+  <div class="force-cache">
+    <h4>强缓存</h4>
+    <p>强缓存可以通过设置两种 HTTP Header 实现：Expires 和 Cache-Control 。强缓存表示在缓存期间不需要请求，state code 为 200.</p>
+  </div>
+  <div class="consult-cache">
+    <h4>协商缓存</h4>
+    <p>如果缓存过期了，就需要发起请求验证资源是否有更新。协商缓存可以通过设置两种 HTTP Header 实现：Last-Modified 和 ETag </p>
+  </div>
+</div>
+
+<!-- 实际场景 -->
+<div class="use-cache">
+  <h3>实际场景应用缓存策略</h3>
+  <hr>
+  <h4>频繁变动的资源</h4>
+  <p>对于频繁变动的资源，首先需要使用 Cache-Control: no-cache 使浏览器每次都请求服务器，然后配合 ETag 或者 Last-Modified
+    来验证资源是否有效。这样的做法虽然不能节省请求数量，但是能显著减少响应数据大小。</p>
+  <h4>代码文件</h4>
+  <p>这里特指除了 HTML 外的代码文件，因为 HTML 文件一般不缓存或者缓存时间很短。
+    一般来说，现在都会使用工具来打包代码，那么我们就可以对文件名进行哈希处理，只有当代码修改后才会生成新的文件名。基于此，我们就可以给代码文件设置缓存有效期一年 Cache-Control: max-age=31536000，这样只有当
+    HTML 文件中引入的文件名发生了改变才会去下载最新的代码文件，否则就一直使用缓存。</p>
+</div>
+</body>
+</html>
