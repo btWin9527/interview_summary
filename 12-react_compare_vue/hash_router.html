@@ -1,0 +1,92 @@
+<!--
+* 场景:不刷新页面，对页面的局部内容进行更改
+*方案1：ajax 方法
+*方案2：哈希（hash）路由原理
+*方案2讲解：监听浏览器的url中的hash（url的#后面的文本——锚文本）值，进行更改内容
+-->
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta charset="UTF-8">
+  <title>js原生页面hash路由</title>
+  <style>
+      ul{
+          float: left;
+          width: 200px;
+      }
+      li{
+          list-style: none;
+          padding: 8px 15px;
+          background: #B9CBF7;
+          text-align: center;
+      }
+      a{
+          color: #86FF00;
+      }
+      #result{
+          height: 200px;
+          margin-left: 200px;
+          line-height: 200px;
+          font-size: 30px;
+          text-align: center;
+          color: #D64BD3;
+      }
+  </style>
+</head>
+<body>
+<div class="container">
+  <ul>
+    <li><a href="#/">首页</a></li>
+    <li><a href="#/product">产品</a></li>
+    <li><a href="#/server">服务</a></li>
+  </ul>
+  <div id="result"></div>
+</div>
+<script>
+  //路由构造器
+  function Router() {
+    //接受所有的配置路由内容：锚 和 函数方法
+    this.routes = {};
+    //接受 改变后的 hash值
+    this.curUrl = '';
+    //将定义的所有路由和函数方法 传给 routes
+    this.route = function (path, callback) {
+      this.routes[path] = callback || function () {};
+      console.log('routes[path]:'+this.routes[path])
+    };
+    //hash 值改变时触发的 函数方法
+    this.refresh = function () {
+      //获取改变的hash值（url中锚 # 号后面的文本）
+      this.curUrl = location.hash.slice(1) || '/';
+      this.routes[this.curUrl]();
+      console.log('location.hash:'+location.hash);
+      console.log('curUrl:'+this.curUrl);
+      console.log('this.routes[this.curUrl]:'+this.routes[this.curUrl])
+    };
+    //监听load（加载url）、hashchange（hash改变）事件
+    this.init = function () {
+      window.addEventListener('load',this.refresh.bind(this),false);
+      window.addEventListener('hashchange',this.refresh.bind(this),false)
+    }
+  }
+  var R = new Router();//使用Router构造器
+
+  R.init();//监听时间
+
+  var res = document.getElementById('result');//读取id为result的元素
+  //定义所有需要用的 路由：hash值 和 加载的内容
+  R.route('/',function () {
+    res.style.background = 'blue';
+    res.innerHTML = '这是首页';
+  })
+  R.route('/product',function () {
+    res.style.background = 'orange';
+    res.innerHTML = '这是产品页';
+  })
+  R.route('/server',function () {
+    res.style.background = 'black';
+    res.innerHTML = '这是服务页';
+  })
+</script>
+</body>
+</html>

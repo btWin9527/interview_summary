@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="html">
+
+<head>
+  <meta charset='utf-8'>
+  <title>HTML5-History</title>
+</head>
+
+<body>
+<button onclick="redClick()">red</button>
+<button onclick="blueClick()">blue</button>
+<button onclick="greenClick()">green</button>
+<p class="test">test innerText</p>
+<button onclick="consoleLog()">打印</button>
+</body>
+
+<script>
+  function redClick() {
+    history.pushState({
+      color: 'red'
+    }, 'red', location.href.split('?')[0] + '?color=red')
+    fnHashTrigger({
+      color: 'red'
+    })
+  }
+
+  function blueClick() {
+    history.pushState({
+      color: 'blue'
+    }, 'blue', location.href.split('?')[0] + '?color=blue')
+    fnHashTrigger({
+      color: 'blue'
+    })
+  }
+
+  function greenClick() {
+    history.pushState({
+      color: 'green'
+    }, 'green', location.href.split('?')[0] + '?color=green')
+    fnHashTrigger({
+      color: 'green'
+    })
+  }
+
+  function fnHashTrigger(state) {
+    console.log(state)
+    if (state) {
+      document.querySelector('.test').style.color = state.color || 'red';
+    }
+  }
+
+  window.addEventListener("popstate", function (event) {
+    fnHashTrigger(event.state);
+  });
+
+  function consoleLog() {
+    console.log(history)
+  }
+</script>
+
+</html>
