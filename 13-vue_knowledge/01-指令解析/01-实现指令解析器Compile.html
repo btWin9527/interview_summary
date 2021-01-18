@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<div id="app">
+  <h2>{{person.name}}</h2>
+  <h2>{{mgs}}</h2>
+  <div v-text="mgs"></div>
+  <div v-text="person.name"></div>
+  <div v-html="htmlStr"></div>
+  <button v-on:click="handleClick">按钮</button>
+  <button @click="handleClick">按钮2</button>
+  <img v-bind:src="imgSrc" alt="">
+  <img :src="imgSrc" alt="">
+  <ul>
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+  </ul>
+  <input type="text" v-model="mgs">
+</div>
+<!--<script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.9/vue.min.js"></script>
+<script>
+  let vm = new Vue({
+    el: '#app',
+    data:{
+      mgs: '123',
+      htmlStr: '<span style="color: red;">test</span>'
+    },
+
+  })
+</script>-->
+<script src="01-MVue.js"></script>
+<script>
+  let vm = new MVue({
+    el: '#app',
+    data: {
+      mgs: '123',
+      htmlStr: '<span style="color: red;">test</span>',
+      person: {
+        name: 'text'
+      },
+      imgSrc: "//www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"
+    },
+    methods: {
+      handleClick() {
+        console.log('click', this)
+      }
+    }
+  })
+</script>
+</body>
+</html>

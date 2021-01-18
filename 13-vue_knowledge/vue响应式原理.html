@@ -9,7 +9,7 @@
 </head>
 <body>
 <h2>vue响应式原理</h2>
-<img src="../img/vue_knowledge/data.png" alt="">
+<img src="../img/vue_knowledge/data.jpg" alt="">
 <div id="app">
 
 </div>
@@ -57,6 +57,7 @@
     }
   }
 
+  /* 数据劫持 */
   function observe(obj) {
     // 判断类型
     if (!obj || typeof obj !== 'object') {
