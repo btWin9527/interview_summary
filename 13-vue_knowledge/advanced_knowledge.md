@@ -115,3 +115,136 @@ function defineReactive(obj, key, val) {
   })
 }
 ```
+
+## Object.defineProperty的缺陷
+
+> 如果通过下标方式修改数组数据或者给对象新增属性并不会触发组件的重新渲染，因为 Object.defineProperty 不能拦截到这些操作，更精确的来说，对于数组而言，大部分操作都是拦截不到的，只是 Vue 内部通过重写函数的方式解决了这个问题
+
+```ts
+// 解决方法: this.$set
+export function set(target: Array<any> | Object, key: any, val: any): any {
+    // 判断是否为数组且下标是否有效
+    if (Array.isArray(target) && isValidArrayIndex(key)) {
+        // 调用splice函数触发派发更新
+        // 该函数已被重写
+        target.length = Math.max(target.length, key);
+        target.splice(key, 1, val);
+        return val;
+    }
+    // 判断key 是否已经存在
+    if (key in target && !(key in Object.prototype)) {
+        target[key] = val;
+        return val;
+    }
+    const ob = (target: any)
+.
+    __ob__;
+    // 如果对象不是响应对象，就赋值返回
+    if (!ob) {
+        target[key] = val;
+        return val;
+    }
+    // 进行双向绑定
+    defineReactive(ob.value, key, val);
+    // 手动派发更新
+    ob.dep.notify()
+    return val;
+}
+```
+
+```ts
+// 重新数组部分api
+// 获得数组原型
+const arrayProto = Array.prototype
+export const arrayMethods = Object.create(arrayProto)
+// 重写以下函数
+const methodsToPatch = [
+    'push',
+    'pop',
+    'shift',
+    'unshift',
+    'splice',
+    'sort',
+    'reverse'
+]
+methodsToPatch.forEach(function (method) {
+    // 缓存原生函数
+    const original = arrayProto[method]
+    // 重写函数
+    def(arrayMethods, method, function mutator(...args) {
+        // 先调用原生函数获得结果
+        const result = original.apply(this, args)
+        const ob = this.__ob__
+        let inserted
+        // 调用以下几个函数时，监听新数据
+        switch (method) {
+            case 'push':
+            case 'unshift':
+                inserted = args
+                break
+            case 'splice':
+                inserted = args.slice(2)
+                break
+        }
+        if (inserted) ob.observeArray(inserted)
+        // 手动派发更新
+        ob.dep.notify()
+        return result
+    })
+})
+```
+
+## vue组件编译过程
+
+> Vue 会通过编译器将模板通过几个阶段最终编译为 render 函数，然后通过执行 render 函数生成 Virtual DOM 最终映射为真实 DOM。
+
+1. 将模板解析为 AST
+2. 优化 AST
+3. 将 AST 转换为 render 函数
+
+```text
+// 生成一个最基本的AST对象
+{
+  // 类型
+  type: 1,
+    // 标签
+    tag,
+    // 属性列表
+    attrsList: attrs,
+  // 属性映射
+  attrsMap: makeAttrsMap(attrs),
+  // 父节点
+  parent,
+  // 子节点
+  children: []
+}
+```
+
+## nextTick原理分析
+
+> nextTick 可以让我们在下次 DOM 更新循环结束之后执行延迟回调，用于获得更新后的 DOM
+
+```js
+// 实现 macrotasks ，会先判断是否能使用 setImmediate ，不能的话降级为 MessageChannel ，以上都不行的话就使用 setTimeout
+if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
+  macroTimerFunc = () => {
+    setImmediate(flushCallbacks)
+  }
+} else if (
+  typeof MessageChannel !== 'undefined' &&
+  (isNative(MessageChannel) ||
+    // PhantomJS
+    MessageChannel.toString() === '[object MessageChannelConstructor]')
+) {
+  const channel = new MessageChannel()
+  const port = channel.port2
+  channel.port1.onmessage = flushCallbacks
+  macroTimerFunc = () => {
+    port.postMessage(1)
+  }
+} else {
+  macroTimerFunc = () => {
+    setTimeout(flushCallbacks, 0)
+  }
+}
+```
